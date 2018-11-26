@@ -12,6 +12,10 @@ import LockIcon from '@material-ui/icons/LockOutlined';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
+import { signInWithEmailAndPassword } from '../../../services'
+import LinearProgress from '@material-ui/core/LinearProgress';
+
+
 
 const styles = theme => ({
     main: {
@@ -45,49 +49,83 @@ const styles = theme => ({
     },
 });
 
-function SignIn(props) {
-    const { classes } = props;
+class SignIn extends React.Component {
+    state = {
+        email: '',
+        password: '',
+        loadingLogin: false
+    }
 
-    return (
-        <main className={classes.main}>
-            <CssBaseline />
-            <Paper className={classes.paper}>
-                <Avatar className={classes.avatar}>
-                    <LockIcon />
-                </Avatar>
-                <Typography component="h1" variant="h5">
-                    Sign in
-                </Typography>
-                <form className={classes.form}>
-                    <FormControl margin="normal" required fullWidth>
-                        <InputLabel htmlFor="email">Email Address</InputLabel>
-                        <Input id="email" name="email" autoComplete="email" autoFocus />
-                    </FormControl>
-                    <FormControl margin="normal" required fullWidth>
-                        <InputLabel htmlFor="password">Password</InputLabel>
-                        <Input name="password" type="password" id="password" autoComplete="current-password" />
-                    </FormControl>
-                    <FormControlLabel
-                        control={<Checkbox value="remember" color="primary" />}
-                        label="Remember me"
-                    />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className={classes.submit}
-                    >
-                        Sign in
-                    </Button>
-                </form>
-            </Paper>
-        </main>
-    );
+    _handleChange = (e) => {
+        this.setState({
+            [e.target.name]: e.target.value
+        })
+    }
+
+    _handleLogin = async () => {
+        try{
+            const {email, password} = this.state;
+            const {afterLogin} = this.props;
+            this.setState({loadingLogin: true})
+            await signInWithEmailAndPassword(email, password)
+            await afterLogin()
+            this.setState({loadingLogin: false})
+        }catch (e) {
+            this.setState({loadingLogin: false})
+            console.log(e)
+        }
+    }
+
+
+    render() {
+        const {classes} = this.props;
+        const {email, password, loadingLogin} = this.state;
+
+        return (
+            <main className={classes.main}>
+                <CssBaseline/>
+                <Paper className={classes.paper}>
+                    <Avatar className={classes.avatar}>
+                        <LockIcon/>
+                    </Avatar>
+                    <Typography component="h1" variant="h5">
+                        Gerenciador Financeiro
+                    </Typography>
+                    <form className={classes.form}>
+                        <FormControl margin="normal" required fullWidth>
+                            <InputLabel htmlFor="email">Endereço de Email</InputLabel>
+                            <Input id="email" value={email} onChange={this._handleChange} name="email" autoFocus/>
+                        </FormControl>
+                        <FormControl margin="normal" required fullWidth>
+                            <InputLabel htmlFor="password">Senha</InputLabel>
+                            <Input name="password" value={password} onChange={this._handleChange} type="password" id="password"/>
+                        </FormControl>
+                        {
+                            !loadingLogin ?
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                color="primary"
+                                className={classes.submit}
+                                onClick={this._handleLogin}
+                            >
+                                Entrar
+                            </Button>
+                            :
+                            <LinearProgress/>
+                        }
+                            </form>
+                </Paper>
+                {/*TODO: Inserir snackbar em caso de erro*/}
+                {/*TODO: Converter botão em form.submit*/}
+            </main>
+        );
+    }
 }
 
 SignIn.propTypes = {
     classes: PropTypes.object.isRequired,
+    afterLogin: PropTypes.func.isRequired
 };
 
 export default withStyles(styles)(SignIn);

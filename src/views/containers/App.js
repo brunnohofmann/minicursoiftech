@@ -2,7 +2,7 @@ import React from 'react'
 import CircularProgress from '@material-ui/core/CircularProgress';
 import LoginPage from './Login/';
 import Gerenciador from './Gerenciador/';
-import {getLoggedUser} from '../../services'
+import {checkLogin} from '../../services'
 
 
 export default class App extends React.Component{
@@ -17,8 +17,8 @@ export default class App extends React.Component{
 
     _checkAccess = async () => {
         try{
-            const user = await getLoggedUser();
-            this.setState({isLogged: user})
+            const isLogged = await checkLogin();
+            this.setState({isLogged})
         }catch (e) {
             this.setState({isLogged: false})
         }
@@ -28,17 +28,15 @@ export default class App extends React.Component{
 
         const { isLogged } = this.state
 
-        console.log(isLogged)
-
         switch (isLogged) {
             case false:
-                return <LoginPage />
+                return <LoginPage afterLogin={this._checkAccess} />;
 
             case true:
-                return <Gerenciador />
+                return <Gerenciador afterLogout={this._checkAccess} />;
 
             default:
-                return <CircularProgress />
+                return <CircularProgress />;
         }
     }
 
